@@ -1,0 +1,17 @@
+# Normalize text to LF in the repo.
+* text=auto
+
+# patch-package patches must stay LF: node_modules content is LF, a CRLF
+# checkout makes the hunks mismatch and postinstall fails on Windows.
+patches/*.patch text eol=lf
+
+# Contract sources and the committed blueprint: keep byte-stable across
+# platforms (script hashes are derived from the compiled code inside).
+contracts/**/*.ak text eol=lf
+contracts/**/plutus.json text eol=lf
+contracts/**/aiken.toml text eol=lf
+contracts/**/aiken.lock text eol=lf
+
+# Binary artifacts
+*.bin binary
+*.png binary

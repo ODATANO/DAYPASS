@@ -1,0 +1,95 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/credentials/v2",
+    "https://catena-x.net/schema/pac/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "PredicateAttestationCredential"
+  ],
+  "id": "urn:bpass:BAT-PAC-MR3UUIH3",
+  "profile": "Catena-X CX-0143 Battery Passport",
+  "issuanceDate": "2026-07-02T18:46:24.059Z",
+  "credentialSubject": {
+    "passportId": "BAT-PAC-MR3UUIH3",
+    "standard": "EU 2023/1542 Annex XIII",
+    "batteryCategory": "EV",
+    "model": "PowerCell EV-75",
+    "manufacturerId": "DE-CELLCO-001",
+    "payloadHash": "c881eefcfac0f860c872ceded933e45b62381f2549417aba6e1f5fc4a927232b",
+    "attestation": {
+      "chain": "cardano-preview",
+      "unit": "8d37accd2efbeea47991b78d6c91424e85a48a47b23cd5b3bd22ddb14241542d5041432d4d52335555494833",
+      "policyId": "8d37accd2efbeea47991b78d6c91424e85a48a47b23cd5b3bd22ddb1",
+      "fingerprint": "asset17s7g2xv7mwzrcjfgnf3q8adl4w86xsvnd7fn4n",
+      "transactionHash": "0x185bf518eae35ff0642fc0edb60debf47373990ffae534cc143d48b5d5b2a340",
+      "lastAnchorTxHash": "0x185bf518eae35ff0642fc0edb60debf47373990ffae534cc143d48b5d5b2a340",
+      "anchorVersion": 1,
+      "anchorMetadataLabel": 1155,
+      "status": "anchored",
+      "verified": true,
+      "verificationModel": "cardano-metadata",
+      "explorer": "https://preview.cardanoscan.io/transaction/185bf518eae35ff0642fc0edb60debf47373990ffae534cc143d48b5d5b2a340"
+    },
+    "predicateProofs": [
+      {
+        "sourceField": "carbonFootprintKgCO2",
+        "disclosureMode": "revealedValue+merkleInclusion",
+        "valueDisclosed": true,
+        "value": 3412.75,
+        "scaledValue": "3412750",
+        "scale": 1000,
+        "merkleProof": {
+          "fieldKey": "964482efc2c71ad3714958074d22608e0b4857bc528dfe588cc40566250c2243",
+          "value": "3412750",
+          "siblings": [
+            "6a5ec4c3ad6356ddbd41cc353f6dd2a78cd816da25ab8dd9f6c37891502ba5d1",
+            "923a46e5093759cd9d38dc8f9501ba7dfb92326cb38d0dde8f7361a2e6a20988",
+            "e381d17f665208c531d93cb1ff550350fdc80a644140ff20437f1435329cbb27",
+            "41ed24bd227dabff990036a70bf580ba215a3651bdf0e6a845ba0d96f41a467e"
+          ],
+          "dirs": [
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        "contentRootAnchorTx": "0x185bf518eae35ff0642fc0edb60debf47373990ffae534cc143d48b5d5b2a340",
+        "anchorMetadataLabel": 1155,
+        "result": true,
+        "verificationModel": "cardano-metadata",
+        "explorer": "https://preview.cardanoscan.io/transaction/185bf518eae35ff0642fc0edb60debf47373990ffae534cc143d48b5d5b2a340"
+      },
+      {
+        "sourceField": "recycledContentPct",
+        "disclosureMode": "revealedValue+merkleInclusion",
+        "valueDisclosed": true,
+        "value": 16.5,
+        "scaledValue": "16500",
+        "scale": 1000,
+        "merkleProof": {
+          "fieldKey": "c71b38f9b11405f410e804e36d1365798817ff981e4435eb8ea3732f4e6e1266",
+          "value": "16500",
+          "siblings": [
+            "40731ca146490a8fcd65d0697f507cbb7188b9f6fce5c9c2029586cff190cacc",
+            "e3da3c8d6ee15a03d43f97262259ac5fd7a04fca5befffee0496c26abe851b59",
+            "e381d17f665208c531d93cb1ff550350fdc80a644140ff20437f1435329cbb27",
+            "41ed24bd227dabff990036a70bf580ba215a3651bdf0e6a845ba0d96f41a467e"
+          ],
+          "dirs": [
+            true,
+            false,
+            true,
+            true
+          ]
+        },
+        "contentRootAnchorTx": "0x185bf518eae35ff0642fc0edb60debf47373990ffae534cc143d48b5d5b2a340",
+        "anchorMetadataLabel": 1155,
+        "result": true,
+        "verificationModel": "cardano-metadata",
+        "explorer": "https://preview.cardanoscan.io/transaction/185bf518eae35ff0642fc0edb60debf47373990ffae534cc143d48b5d5b2a340"
+      }
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+# DAYPASS sidecars. The CAP app itself runs via `npm start` on the host;
+# this compose currently only provides the ZK prover.
+#
+#   docker compose up -d daypass-prover
+#   curl http://localhost:8799/health
+services:
+  daypass-prover:
+    build: ./zk/daypass-prover
+    container_name: daypass-prover
+    ports:
+      - "8799:8799"
+    volumes:
+      # Dev trusted-setup cache from the repo: keeps the VK and the verifier
+      # policyId stable across container rebuilds and identical to WSL runs.
+      - ./zk/daypass-prover/data:/app/data
+    restart: unless-stopped

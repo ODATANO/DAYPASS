@@ -1,0 +1,16 @@
+name = "odatano/passport_mint_policy"
+version = "0.1.0"
+compiler = "v1.1.21"
+plutus = "v3"
+license = "Apache-2.0"
+description = "DAYPASS passport NFT minting policy: mint/burn gated by the producer's payment key signature"
+
+[repository]
+user = "ODATANO"
+project = "DAYPASS"
+platform = "github"
+
+[[dependencies]]
+name = "aiken-lang/stdlib"
+version = "v2.2.0"
+source = "github"

@@ -1,0 +1,14 @@
+diff --git a/node_modules/@harmoniclabs/crypto/dist/noble/bls12_381.js b/node_modules/@harmoniclabs/crypto/dist/noble/bls12_381.js
+index 3ee735d..1dc54f0 100644
+--- a/node_modules/@harmoniclabs/crypto/dist/noble/bls12_381.js
++++ b/node_modules/@harmoniclabs/crypto/dist/noble/bls12_381.js
+@@ -1057,7 +1057,8 @@ var htfDefaults = Object.freeze({
+ var COMPRESSED_ZERO = setMask(exports.Fp.toBytes(_0n), { infinity: true, compressed: true }); // set compressed & point-at-infinity bits
+ function parseMask(bytes) {
+     // Copy, so we can remove mask data. It will be removed also later, when Fp.create will call modulo.
+-    bytes = bytes.slice();
++    // NOTE: must be a real copy even for Node Buffers (Buffer#slice returns a view, not a copy)
++    bytes = Uint8Array.prototype.slice.call(bytes);
+     var mask = bytes[0] & 224;
+     var compressed = !!((mask >> 7) & 1); // compression bit (0b1000_0000)
+     var infinity = !!((mask >> 6) & 1); // point at infinity bit (0b0100_0000)

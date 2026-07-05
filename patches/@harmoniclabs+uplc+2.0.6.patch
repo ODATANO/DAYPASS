@@ -1,0 +1,54 @@
+diff --git a/node_modules/@harmoniclabs/uplc/dist/UPLCTerms/Builtin/UPLCBuiltinTag.d.ts b/node_modules/@harmoniclabs/uplc/dist/UPLCTerms/Builtin/UPLCBuiltinTag.d.ts
+index 9805752..e146896 100644
+--- a/node_modules/@harmoniclabs/uplc/dist/UPLCTerms/Builtin/UPLCBuiltinTag.d.ts
++++ b/node_modules/@harmoniclabs/uplc/dist/UPLCTerms/Builtin/UPLCBuiltinTag.d.ts
+@@ -61,16 +61,16 @@ export declare enum UPLCBuiltinTag {
+     bls12_381_G1_neg = 55,
+     bls12_381_G1_scalarMul = 56,
+     bls12_381_G1_equal = 57,
+-    bls12_381_G1_hashToGroup = 58,
+-    bls12_381_G1_compress = 59,
+-    bls12_381_G1_uncompress = 60,
++    bls12_381_G1_compress = 58,
++    bls12_381_G1_uncompress = 59,
++    bls12_381_G1_hashToGroup = 60,
+     bls12_381_G2_add = 61,
+     bls12_381_G2_neg = 62,
+     bls12_381_G2_scalarMul = 63,
+     bls12_381_G2_equal = 64,
+-    bls12_381_G2_hashToGroup = 65,
+-    bls12_381_G2_compress = 66,
+-    bls12_381_G2_uncompress = 67,
++    bls12_381_G2_compress = 65,
++    bls12_381_G2_uncompress = 66,
++    bls12_381_G2_hashToGroup = 67,
+     bls12_381_millerLoop = 68,
+     bls12_381_mulMlResult = 69,
+     bls12_381_finalVerify = 70,
+diff --git a/node_modules/@harmoniclabs/uplc/dist/UPLCTerms/Builtin/UPLCBuiltinTag.js b/node_modules/@harmoniclabs/uplc/dist/UPLCTerms/Builtin/UPLCBuiltinTag.js
+index 3fe67c9..21b873a 100644
+--- a/node_modules/@harmoniclabs/uplc/dist/UPLCTerms/Builtin/UPLCBuiltinTag.js
++++ b/node_modules/@harmoniclabs/uplc/dist/UPLCTerms/Builtin/UPLCBuiltinTag.js
+@@ -75,16 +75,16 @@ var UPLCBuiltinTag;
+     UPLCBuiltinTag[UPLCBuiltinTag["bls12_381_G1_neg"] = 55] = "bls12_381_G1_neg";
+     UPLCBuiltinTag[UPLCBuiltinTag["bls12_381_G1_scalarMul"] = 56] = "bls12_381_G1_scalarMul";
+     UPLCBuiltinTag[UPLCBuiltinTag["bls12_381_G1_equal"] = 57] = "bls12_381_G1_equal";
+-    UPLCBuiltinTag[UPLCBuiltinTag["bls12_381_G1_hashToGroup"] = 58] = "bls12_381_G1_hashToGroup";
+-    UPLCBuiltinTag[UPLCBuiltinTag["bls12_381_G1_compress"] = 59] = "bls12_381_G1_compress";
+-    UPLCBuiltinTag[UPLCBuiltinTag["bls12_381_G1_uncompress"] = 60] = "bls12_381_G1_uncompress";
++    UPLCBuiltinTag[UPLCBuiltinTag["bls12_381_G1_compress"] = 58] = "bls12_381_G1_compress";
++    UPLCBuiltinTag[UPLCBuiltinTag["bls12_381_G1_uncompress"] = 59] = "bls12_381_G1_uncompress";
++    UPLCBuiltinTag[UPLCBuiltinTag["bls12_381_G1_hashToGroup"] = 60] = "bls12_381_G1_hashToGroup";
+     UPLCBuiltinTag[UPLCBuiltinTag["bls12_381_G2_add"] = 61] = "bls12_381_G2_add";
+     UPLCBuiltinTag[UPLCBuiltinTag["bls12_381_G2_neg"] = 62] = "bls12_381_G2_neg";
+     UPLCBuiltinTag[UPLCBuiltinTag["bls12_381_G2_scalarMul"] = 63] = "bls12_381_G2_scalarMul";
+     UPLCBuiltinTag[UPLCBuiltinTag["bls12_381_G2_equal"] = 64] = "bls12_381_G2_equal";
+-    UPLCBuiltinTag[UPLCBuiltinTag["bls12_381_G2_hashToGroup"] = 65] = "bls12_381_G2_hashToGroup";
+-    UPLCBuiltinTag[UPLCBuiltinTag["bls12_381_G2_compress"] = 66] = "bls12_381_G2_compress";
+-    UPLCBuiltinTag[UPLCBuiltinTag["bls12_381_G2_uncompress"] = 67] = "bls12_381_G2_uncompress";
++    UPLCBuiltinTag[UPLCBuiltinTag["bls12_381_G2_compress"] = 65] = "bls12_381_G2_compress";
++    UPLCBuiltinTag[UPLCBuiltinTag["bls12_381_G2_uncompress"] = 66] = "bls12_381_G2_uncompress";
++    UPLCBuiltinTag[UPLCBuiltinTag["bls12_381_G2_hashToGroup"] = 67] = "bls12_381_G2_hashToGroup";
+     UPLCBuiltinTag[UPLCBuiltinTag["bls12_381_millerLoop"] = 68] = "bls12_381_millerLoop";
+     UPLCBuiltinTag[UPLCBuiltinTag["bls12_381_mulMlResult"] = 69] = "bls12_381_mulMlResult";
+     UPLCBuiltinTag[UPLCBuiltinTag["bls12_381_finalVerify"] = 70] = "bls12_381_finalVerify";

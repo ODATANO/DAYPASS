@@ -1,0 +1,51 @@
+{
+  "aspect": "urn:samm:io.catenax.battery.battery_pass:6.0.0#BatteryPass",
+  "profile": "EU 2023/1542 Annex XIII · Catena-X CX-0143",
+  "passportId": "BAT-PAC-MR3UUIH3",
+  "general": {
+    "manufacturerId": "DE-CELLCO-001",
+    "batteryCategory": "EV",
+    "model": "PowerCell EV-75",
+    "manufactureDate": "2026-03-15",
+    "weightKg": 432.5,
+    "performanceClass": "B",
+    "qrCodeUrl": "http://localhost:4004/p/BAT-PAC-MR3UUIH3"
+  },
+  "cells": [
+    {
+      "serialNumber": "SN-PAC-1",
+      "cellChemistry": "NMC-811",
+      "capacityKwh": 75,
+      "carbonFootprintKgCO2": 3412.75,
+      "recycledContentPct": 16.5,
+      "cycleLife": 4200,
+      "roundTripEfficiencyPct": 92.5,
+      "leadContentPpm": 45,
+      "supplierName": "CathodeWorks GmbH"
+    }
+  ],
+  "recycledContent": [
+    {
+      "material": "Co",
+      "recycledPercentage": 16.5,
+      "sourceSupplierName": "ReCobalt Ltd"
+    }
+  ],
+  "dueDiligence": [],
+  "integrity": {
+    "chain": "cardano-preview",
+    "payloadHash": "c881eefcfac0f860c872ceded933e45b62381f2549417aba6e1f5fc4a927232b",
+    "passportIdHash": "6ffa3cebd5936a924dd912f9cbce0c6944278e6786e03d1d21a9e47ee389738f",
+    "contentRoot": "a886b9629ab98ee968e2e798665b27352e50c701c9d952b9a38e25614ee2aab9",
+    "policyId": "8d37accd2efbeea47991b78d6c91424e85a48a47b23cd5b3bd22ddb1",
+    "assetName": "4241542d5041432d4d52335555494833",
+    "unit": "8d37accd2efbeea47991b78d6c91424e85a48a47b23cd5b3bd22ddb14241542d5041432d4d52335555494833",
+    "fingerprint": "asset17s7g2xv7mwzrcjfgnf3q8adl4w86xsvnd7fn4n",
+    "attestationTxHash": "0x185bf518eae35ff0642fc0edb60debf47373990ffae534cc143d48b5d5b2a340",
+    "lastAnchorTxHash": "0x185bf518eae35ff0642fc0edb60debf47373990ffae534cc143d48b5d5b2a340",
+    "anchorVersion": 1,
+    "anchorMetadataLabel": 1155,
+    "status": "anchored",
+    "anchored": true
+  }
+}

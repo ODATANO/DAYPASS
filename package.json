@@ -1,0 +1,62 @@
+{
+  "name": "@odatano/daypass",
+  "version": "0.0.1",
+  "description": "DAYPASS is an EU Battery Regulation 2023/1542 Digital Product Passport consumer app on Cardano (CIP-25 NFT + anchor metadata). It consumes @odatano/core as a CAP plugin.",
+  "private": true,
+  "author": "ODATANO",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ODATANO/DAYPASS"
+  },
+  "dependencies": {
+    "@noble/hashes": "^1.5.0",
+    "@odatano/core": "^1.9.4",
+    "@sap/cds": "^9",
+    "express": "^4",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@cap-js/cds-typer": "^0.39.1",
+    "@cap-js/cds-types": "^0.16.0",
+    "@cap-js/sqlite": "^2",
+    "@sap/cds-dk": "^9",
+    "@types/node": "^24.0.0",
+    "@types/qrcode": "^1.5.6",
+    "patch-package": "^8.0.1",
+    "tsx": "^4",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "postinstall": "patch-package",
+    "start": "cds-tsx serve",
+    "deploy": "node -e \"const cds=require('@sap/cds');(async()=>{await cds.plugins;const m=await cds.load('*');await cds.deploy(m).to('db');console.log('deployed to db/daypass.db')})().catch(e=>{console.error(e);process.exit(1)})\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "cds": {
+    "requires": {
+      "db": {
+        "kind": "sqlite",
+        "credentials": {
+          "database": "db/daypass.db"
+        }
+      },
+      "odatano-core": {
+        "network": "preview",
+        "backends": [
+          "blockfrost"
+        ],
+        "indexTtlMs": 60000
+      },
+      "auth": {
+        "kind": "custom",
+        "impl": "srv/auth.js"
+      }
+    },
+    "odata": {
+      "version": "v4"
+    }
+  },
+  "imports": {
+    "#cds-models/*": "./@cds-models/*/index.js"
+  }
+}

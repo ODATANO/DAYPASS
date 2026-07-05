@@ -1,0 +1,25 @@
+<core:FragmentDefinition
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core">
+  <!-- Shared on-chain verification panel (all tiers). Calls the public
+       GET /verify/:passportId endpoint; the result is verification EVIDENCE
+       computed server-side against Cardano, independent of the viewer tier. -->
+  <Panel headerText="On-chain verification" expandable="true" expanded="true" class="sapUiSmallMarginTop">
+    <HBox alignItems="Center" class="sapUiTinyMarginBottom">
+      <Button text="Verify on chain" icon="sap-icon://validate" press="onVerifyOnChain"
+              busy="{verify>/busy}" busyIndicatorDelay="0"/>
+      <ObjectStatus
+        text="{= ${verify>/state} === 'ok' ? 'Verified' : ${verify>/state} === 'bad' ? 'Verification failed' : '' }"
+        state="{= ${verify>/state} === 'ok' ? 'Success' : ${verify>/state} === 'bad' ? 'Error' : 'None' }"
+        icon="{= ${verify>/state} === 'ok' ? 'sap-icon://accept' : ${verify>/state} === 'bad' ? 'sap-icon://error' : '' }"
+        class="sapUiSmallMarginBegin"/>
+    </HBox>
+    <List items="{verify>/checks}" visible="{= (${verify>/checks} || []).length > 0 }" showSeparators="None">
+      <StandardListItem
+        title="{verify>check}"
+        description="{verify>detail}"
+        icon="{= ${verify>pass} ? 'sap-icon://accept' : 'sap-icon://decline' }"
+        iconInset="false"/>
+    </List>
+  </Panel>
+</core:FragmentDefinition>
