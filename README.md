@@ -1,5 +1,11 @@
 # @odatano/daypass (DAYPASS)
 
+[![Tests](https://github.com/ODATANO/DAYPASS/actions/workflows/test.yaml/badge.svg)](https://github.com/ODATANO/DAYPASS/actions/workflows/test.yaml)
+[![codecov](https://codecov.io/gh/ODATANO/DAYPASS/branch/main/graph/badge.svg)](https://codecov.io/gh/ODATANO/DAYPASS)
+[![@odatano/core](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FODATANO%2FDAYPASS%2Fmain%2Fpackage.json&query=%24.dependencies%5B%27%40odatano%2Fcore%27%5D&logo=npm&label=%40odatano%2Fcore&color=blue)](https://www.npmjs.com/package/@odatano/core)
+[![ZeroJ](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FODATANO%2FDAYPASS%2Fmain%2Fpackage.json&query=%24.zkToolchain.zeroj&label=ZeroJ&color=8A2BE2)](https://github.com/bloxbean/zeroj)
+[![Julc](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FODATANO%2FDAYPASS%2Fmain%2Fpackage.json&query=%24.zkToolchain.julc&label=Julc&color=8A2BE2)](https://github.com/bloxbean)
+
 EU Battery Regulation 2023/1542 Digital Product Passport on **Cardano**: one
 CIP-25 NFT per passport plus an anchor metadata label carrying the payload
 hash, a Merkle content root and the public Point-1 fields. Sensitive data

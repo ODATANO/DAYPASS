@@ -8,6 +8,11 @@
     "type": "git",
     "url": "https://github.com/ODATANO/DAYPASS"
   },
+  "zkToolchain": {
+    "_comment": "ZK sidecar versions surfaced as README badges (shields dynamic/json). Mirror of zk/daypass-prover/build.gradle ext{} — keep in sync on bump.",
+    "zeroj": "0.1.0-pre4",
+    "julc": "0.1.0-pre14"
+  },
   "dependencies": {
     "@noble/hashes": "^1.5.0",
     "@odatano/core": "^1.9.4",

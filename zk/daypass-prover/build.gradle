@@ -17,6 +17,9 @@ repositories {
 }
 
 ext {
+    // zeroj/julc are mirrored in the repo-root package.json (zkToolchain) so the
+    // README badges can read them via shields dynamic/json — keep both in sync.
+    // (Not read from there directly: the Docker build context is this dir only.)
     zerojVersion = '0.1.0-pre4'
     julcVersion = '0.1.0-pre14'
     cclVersion = '0.8.0-pre4'
