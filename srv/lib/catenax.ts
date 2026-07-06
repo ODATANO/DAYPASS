@@ -89,6 +89,9 @@ export function buildPacJson(rows: PacRows): string {
         issuanceDate: new Date().toISOString(),
         credentialSubject: {
             passportId: p.passportId,
+            // Needed by the portable verifier to bind the predicate token
+            // (asset name == passportIdHash) back to this passport.
+            passportIdHash: p.passportIdHash ?? null,
             standard: 'EU 2023/1542 Annex XIII',
             batteryCategory: p.batteryCategory,
             model: p.model,
@@ -104,12 +107,20 @@ export function buildPacJson(rows: PacRows): string {
                 anchorVersion: p.anchorVersion ?? 0,
                 anchorMetadataLabel: anchorLabel(),
                 status: p.status,
-                verified: p.status === 'anchored' && !!p.attestationTxHash,
+                // DB-state assertion only; a verifier resolves the anchor tx on-chain.
+                locallyAnchored: p.status === 'anchored' && !!p.attestationTxHash,
                 verificationModel: 'cardano-metadata',
                 explorer: p.attestationTxHash ? explorerUrl(String(p.attestationTxHash).replace(/^0x/, ''), network) : null
             },
             predicateProofs: rows.proofs.map((pr) => {
                 if (pr.mode === 'zk') {
+                    // Public inputs the mint tx committed to on-chain: the Groth16
+                    // verifier policy only lets the token mint when the proof
+                    // verifies against exactly these. Exporting them lets a
+                    // portable verifier re-derive the expected asset unit and
+                    // datum instead of trusting the mere existence of a tx.
+                    let pj: any = {};
+                    try { pj = pr.proofJson ? JSON.parse(pr.proofJson) : {}; } catch { /* keep {} */ }
                     return {
                         sourceField: pr.sourceField,
                         disclosureMode: 'zkPredicate',
@@ -121,7 +132,32 @@ export function buildPacJson(rows: PacRows): string {
                         result: true,
                         system: 'groth16-bls12381',
                         transactionHash: hex0x(pr.txHash),
-                        verificationModel: 'cardano-onchain',
+                        // --- portable-verification material ---
+                        // The Groth16 verifier minting policy (its scriptHash IS
+                        // the policyId). A verifier MUST pin this against a
+                        // trusted set; it is exported for discovery, not trust.
+                        verifierPolicyId: pj.policyId ?? null,
+                        // On-chain asset name of the predicate token: ODATANO's
+                        // mintActions keeps only the bytes of the 64-hex
+                        // passportIdHash that trail the 56-hex policyId, so the
+                        // minted name is passportIdHash.slice(56). Advisory: the
+                        // verifier reads the actual token from the tx outputs.
+                        predicateAssetName: p.passportIdHash ? String(p.passportIdHash).replace(/^0x/, '').slice(56) : null,
+                        // Circuit public inputs (decimal field elements). Advisory:
+                        // the verifier recomputes fieldKey and reads poseidonRoot
+                        // from the on-chain anchor rather than trusting these.
+                        publicInputs: {
+                            poseidonRoot: pj.poseidonRoot ?? null,
+                            fieldKey: pj.fieldKey ?? null,
+                            threshold: pj.threshold ?? null,
+                            isCompliant: 1
+                        },
+                        // The poseidonRoot the predicate is bound to is anchored on
+                        // this tx (mint/reattest); the verifier compares the datum
+                        // root against it to prevent a valid-proof-wrong-passport swap.
+                        contentRootAnchorTx: hex0x(p.lastAnchorTxHash),
+                        anchorMetadataLabel: anchorLabel(),
+                        verificationModel: 'cardano-onchain-groth16-mint',
                         explorer: pr.txHash ? explorerUrl(String(pr.txHash).replace(/^0x/, ''), network) : null
                     };
                 }

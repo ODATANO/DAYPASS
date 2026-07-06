@@ -30,7 +30,10 @@
     "postinstall": "patch-package",
     "start": "cds-tsx serve",
     "deploy": "node -e \"const cds=require('@sap/cds');(async()=>{await cds.plugins;const m=await cds.load('*');await cds.deploy(m).to('db');console.log('deployed to db/daypass.db')})().catch(e=>{console.error(e);process.exit(1)})\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test \"test/unit/**/*.test.ts\"",
+    "test:ci": "node --import tsx --test-reporter=spec --test \"test/unit/**/*.test.ts\"",
+    "test:coverage": "node -e \"require('fs').mkdirSync('coverage',{recursive:true})\" && node --import tsx --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage/lcov.info --test-reporter=spec --test-reporter-destination=stdout --test \"test/unit/**/*.test.ts\""
   },
   "cds": {
     "requires": {

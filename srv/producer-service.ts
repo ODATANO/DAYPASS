@@ -1124,12 +1124,78 @@ export default class ProducerService extends cds.ApplicationService {
 
     // --- wallet-mode callbacks (cockpit) -------------------------------------------------
 
-    /** Watch a wallet-submitted tx to confirmation (detached, like the pipeline). */
-    private trackWalletTx(txRowId: string, txHash: string, onConfirmed?: () => Promise<void>): void {
+    /**
+     * Structurally verify a wallet-submitted tx against the passport's expected
+     * anchor: fetch the on-chain metadata and confirm the anchor block carries
+     * the values THIS passport commits to (passportIdHash + op, plus per-op
+     * commitments / grant / predicate fields), rather than trusting the fields
+     * the browser reported. Any lookup or parse failure returns { ok:false } so
+     * an unverifiable tx never finalizes as confirmed.
+     */
+    private async verifyAnchorTx(txHash: string, expect: {
+        op: string;
+        passportIdHash?: string;
+        payloadHash?: string;
+        contentRoot?: string;
+        grantee?: string;
+        level?: number;
+        fieldKey?: string;
+        predicate?: string;
+        result?: boolean;
+    }): Promise<{ ok: boolean; detail?: string }> {
+        try {
+            const odata = await cds.connect.to('CardanoODataService');
+            const meta: any = await odata.send('GetMetadataByTxHash', { txHash });
+            const rows: any[] = Array.isArray(meta) ? meta : (meta?.value ?? []);
+            const anchorRow = rows.find((r: any) => String(r.label) === String(anchorLabel()));
+            if (!anchorRow) return { ok: false, detail: 'no anchor metadata on tx' };
+            const anchor = JSON.parse(anchorRow.payload);
+            const eqHex = (a: unknown, b?: string) =>
+                !b || String(a ?? '').toLowerCase().replace(/^0x/, '') === b.toLowerCase().replace(/^0x/, '');
+            const mism: string[] = [];
+            if (String(anchor.op) !== expect.op) mism.push(`op ${anchor.op}!=${expect.op}`);
+            if (!eqHex(anchor.passportIdHash, expect.passportIdHash)) mism.push('passportIdHash');
+            if (!eqHex(anchor.payloadHash, expect.payloadHash)) mism.push('payloadHash');
+            if (!eqHex(anchor.contentRoot, expect.contentRoot)) mism.push('contentRoot');
+            if (!eqHex(anchor.grantee, expect.grantee)) mism.push('grantee');
+            if (expect.level != null && Number(anchor.level) !== Number(expect.level)) mism.push('level');
+            if (!eqHex(anchor.fieldKey, expect.fieldKey)) mism.push('fieldKey');
+            if (expect.predicate && String(anchor.predicate) !== expect.predicate) mism.push('predicate');
+            if (expect.result != null && Number(anchor.result) !== (expect.result ? 1 : 0)) mism.push('result');
+            return mism.length ? { ok: false, detail: `anchor mismatch: ${mism.join(',')}` } : { ok: true };
+        } catch (e: any) {
+            return { ok: false, detail: String(e?.message ?? e).slice(0, 300) };
+        }
+    }
+
+    /**
+     * Watch a wallet-submitted tx to confirmation (detached, like the pipeline).
+     *
+     * When `verify` is supplied, the tx must ALSO pass a structural content check
+     * (the right anchor metadata for this passport) before it is confirmed. A
+     * confirmed-but-mismatched tx is marked failed and `onConfirmed` never runs,
+     * so a fabricated or unrelated txHash cannot flip the passport to anchored.
+     */
+    private trackWalletTx(
+        txRowId: string, txHash: string,
+        onConfirmed?: () => Promise<void>,
+        verify?: () => Promise<{ ok: boolean; detail?: string }>
+    ): void {
         setImmediate(async () => {
             try {
                 await new Promise((r) => setTimeout(r, 500));
                 const onChain: any = await waitForConfirmation(txHash);
+                if (verify) {
+                    const v = await verify();
+                    if (!v.ok) {
+                        await this.runDetached(async () => {
+                            await UPDATE.entity(TXLOG).set({
+                                status: 'failed', errorMessage: `unverified anchor: ${v.detail ?? 'content mismatch'}`.slice(0, 1000)
+                            }).where({ ID: txRowId });
+                        });
+                        return; // do NOT finalize; passport stays in its pre-confirm state
+                    }
+                }
                 await this.runDetached(async () => {
                     await UPDATE.entity(TXLOG).set({ status: 'confirmed', blockHash: onChain?.blockHash ?? null }).where({ ID: txRowId });
                 });
@@ -1162,7 +1228,10 @@ export default class ProducerService extends cds.ApplicationService {
             await this.runDetached(async () => {
                 await UPDATE.entity(PASSPORTS).set({ status: 'anchored' }).where({ ID: row.ID });
             });
-        });
+        }, () => this.verifyAnchorTx(String(txHash), {
+            op: 'attest', passportIdHash: row.passportIdHash,
+            payloadHash: row.payloadHash, contentRoot: row.contentRoot
+        }));
         return { ok: true };
     }
 
@@ -1193,7 +1262,10 @@ export default class ProducerService extends cds.ApplicationService {
             await this.runDetached(async () => {
                 await UPDATE.entity(GRANTLOG).set({ status: 'confirmed' }).where({ ID: grantLogId });
             });
-        });
+        }, () => this.verifyAnchorTx(String(txHash), {
+            op: String(op), passportIdHash: row.passportIdHash,
+            grantee, level: op === 'grant' ? Number(level) || 0 : 0
+        }));
         return { ok: true };
     }
 
@@ -1222,7 +1294,11 @@ export default class ProducerService extends cds.ApplicationService {
                 await this.runDetached(async () => {
                     await UPDATE.entity(PROOFLOG).set({ status: 'confirmed' }).where({ ID: proofLogId });
                 });
-            });
+            }, () => this.verifyAnchorTx(String(txHash), {
+                op: 'predicate', passportIdHash: row.passportIdHash,
+                fieldKey: blake2b256Hex(String(sourceField)),
+                predicate: predicate || undefined, result: result !== false
+            }));
         }
         return { ok: true };
     }
@@ -1266,7 +1342,10 @@ export default class ProducerService extends cds.ApplicationService {
             await this.runDetached(async () => {
                 await UPDATE.entity(PASSPORTS).set({ status: 'anchored' }).where({ ID: row.ID });
             });
-        });
+        }, () => this.verifyAnchorTx(String(txHash), {
+            op: 'reattest', passportIdHash: row.passportIdHash,
+            payloadHash: derived.payloadHash, contentRoot: derived.contentRoot
+        }));
         return { ok: true };
     }
 
@@ -1324,7 +1403,9 @@ export default class ProducerService extends cds.ApplicationService {
             await this.runDetached(async () => {
                 await UPDATE.entity(PASSPORTS).set({ status: 'revoked' }).where({ ID: row.ID });
             });
-        });
+        }, () => this.verifyAnchorTx(String(txHash), {
+            op: 'burn', passportIdHash: row.passportIdHash
+        }));
         return { ok: true };
     }
 

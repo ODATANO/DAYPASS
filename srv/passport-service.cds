@@ -65,7 +65,7 @@ service PassportService {
         attestationTxHash : String;
         explorerUrl       : String;
         status            : String;
-        verified          : Boolean; // anchored on-chain (mint tx present)
+        locallyAnchored   : Boolean; // DB state: anchored + mint tx present (NOT a live chain re-check; use verifyPassportOnChain)
         viewerUrl         : String; // /resolve/<hash> — tier-gated landing
     };
 

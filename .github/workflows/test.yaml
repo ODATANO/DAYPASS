@@ -1,0 +1,126 @@
+name: DAYPASS Tests
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daypass-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # =========================================================================
+  # Aiken: the passport mint policy must still compile, and the committed
+  # plutus.json must match what the sources build (drift guard). A silent
+  # policyId change re-namespaces every passport, so this gate is load-bearing.
+  # =========================================================================
+  aiken:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install Aiken
+        run: |
+          curl -sSfL https://install.aiken-lang.org | bash
+          echo "$HOME/.aiken/bin" >> $GITHUB_PATH
+          export PATH="$HOME/.aiken/bin:$PATH"
+          aikup install v1.1.21
+
+      - name: Aiken version
+        run: aiken --version
+
+      - name: aiken check
+        working-directory: contracts/passport-mint-policy
+        run: aiken check
+
+      - name: aiken build
+        working-directory: contracts/passport-mint-policy
+        run: aiken build
+
+      - name: Verify plutus.json is up to date with sources
+        working-directory: contracts/passport-mint-policy
+        run: |
+          if ! git diff --exit-code plutus.json; then
+            echo "::error::contracts/passport-mint-policy/plutus.json is out of sync with the Aiken sources."
+            echo "Run 'aiken build' in contracts/passport-mint-policy/ and commit the updated plutus.json."
+            exit 1
+          fi
+
+  # =========================================================================
+  # Node: type check + the offline unit suite (node:test via tsx). Pure lib
+  # tests, no chain / server / secrets — they exercise the crypto, metadata
+  # composition, tx signer and the portable PAC verifier.
+  # =========================================================================
+  test:
+    name: Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [22.x, 24.x]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Run unit tests with coverage
+        env:
+          NODE_ENV: test
+        run: npm run test:coverage
+
+      - name: Upload coverage to Codecov
+        if: matrix.node-version == '22.x'
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage/lcov.info
+          flags: node-${{ matrix.node-version }}
+          name: node-${{ matrix.node-version }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
+  # =========================================================================
+  # Registry: the pinned Groth16 verifier policies are the trust root for
+  # zkPredicate PAC verification. Catch a malformed pin (bad hash length, not
+  # JSON) before it silently makes the portable verifier accept nothing.
+  # =========================================================================
+  verifier-policies:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Validate verifier-policies.json
+        run: |
+          node -e '
+            const r = require("./tractusx/pac/verifier-policies.json");
+            if (!r || typeof r.policies !== "object") { console.error("missing policies map"); process.exit(1); }
+            let bad = 0;
+            for (const [net, ops] of Object.entries(r.policies)) {
+              for (const [op, hash] of Object.entries(ops)) {
+                if (hash !== "" && !/^[0-9a-f]{56}$/.test(hash)) {
+                  console.error(`::error::${net}.${op} is not a 56-hex policyId (or empty): "${hash}"`);
+                  bad++;
+                }
+              }
+            }
+            if (bad) process.exit(1);
+            console.log("verifier-policies.json is well-formed");
+          '

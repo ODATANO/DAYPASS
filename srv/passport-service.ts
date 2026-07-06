@@ -209,7 +209,9 @@ export default class PassportService extends cds.ApplicationService {
             attestationTxHash: row.attestationTxHash,
             explorerUrl: row.attestationTxHash ? explorerUrl(row.attestationTxHash) : '',
             status: row.status,
-            verified: row.status === 'anchored' && !!row.attestationTxHash,
+            // DB-state assertion only (anchored + mint tx present); NOT a live
+            // on-chain re-verification. Callers wanting proof use verifyPassportOnChain.
+            locallyAnchored: row.status === 'anchored' && !!row.attestationTxHash,
             viewerUrl: `${base}/resolve/${raw}`
         };
     }

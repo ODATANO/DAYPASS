@@ -1,0 +1,32 @@
+{
+  "_comment": [
+    "Pinned Groth16 predicate-verifier minting policies, per network and operator.",
+    "This is the TRUST ROOT for zkPredicate proofs: verify-pac.mjs only accepts a",
+    "predicate token minted under a policyId listed here. An empty map means",
+    "'trust nothing' -> every zkPredicate check fails until you pin the real hash.",
+    "",
+    "Populate from a trusted source, NOT from the PAC being verified:",
+    "  curl -s $DAYPASS_ZK_PROVER_URL/validator?op=lessOrEqual | jq -r .scriptHash",
+    "or read the confirmed on-chain mint policyId of a known-good predicate tx.",
+    "A change of the trusted setup (zk/daypass-prover/data/*.bin) changes the VK",
+    "and therefore the policyId, so re-pin after any setup change.",
+    "",
+    "You may also pass extra trusted hashes at run time without editing this file:",
+    "  PAC_TRUST_VERIFIER_POLICY=<hash>[,<hash>] node verify-pac.mjs ...",
+    "  node verify-pac.mjs <pac.json> --trust-verifier-policy=<hash>"
+  ],
+  "policies": {
+    "cardano-preview": {
+      "greaterOrEqual": "d2b0c7234aacd45e2ed8a03e4ff048d111ddda2357386fca4e0cbc06",
+      "lessOrEqual": "e0769fe8bad64dbb3480d40b1820718318c6593088e6f7b9fb2a4f36"
+    },
+    "cardano-preprod": {
+      "greaterOrEqual": "",
+      "lessOrEqual": ""
+    },
+    "cardano-mainnet": {
+      "greaterOrEqual": "",
+      "lessOrEqual": ""
+    }
+  }
+}
