@@ -8,7 +8,7 @@ import { poseidonRootBytes, composeAnchor } from '../../srv/lib/metadata-compose
 import { blake2b256Hex } from '../../srv/lib/passport-anchor';
 
 describe('unwrapCborByteString', () => {
-    it('strips one 2-byte-length byte-string wrap (Julc getCborHex shape)', () => {
+    it('strips one 2-byte-length byte-string wrap (double-wrapped script shape)', () => {
         // 59 0003 = byte string of 3 bytes
         assert.equal(unwrapCborByteString('590003aabbcc'), 'aabbcc');
     });

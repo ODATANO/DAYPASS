@@ -1,16 +1,21 @@
 # DAYPASS sidecars. The CAP app itself runs via `npm start` on the host;
-# this compose currently only provides the ZK prover.
+# this compose currently only provides the ZK prover sidecar (DAYZERO).
 #
 #   docker compose up -d daypass-prover
 #   curl http://localhost:8799/health
 services:
   daypass-prover:
-    build: ./zk/daypass-prover
+    image: node:22-alpine
     container_name: daypass-prover
+    command: npx -y -p @odatano/dayzero@^0.1.1 dayzero-daypass-sidecar
+    environment:
+      # Trust roots from the repo: the secret-free proving keys and the
+      # validator registry. Regenerating them changes the VK and the on-chain
+      # policyIds pinned in tractusx/pac/verifier-policies.json.
+      DAYZERO_DAYPASS_PROVING_KEYS: /artifacts
+      DAYZERO_DAYPASS_VALIDATOR_ARTIFACTS: /artifacts/daypass-validator-registry.crs.json
     ports:
       - "8799:8799"
     volumes:
-      # Dev trusted-setup cache from the repo: keeps the VK and the verifier
-      # policyId stable across container rebuilds and identical to WSL runs.
-      - ./zk/daypass-prover/data:/app/data
+      - ./zk/artifacts:/artifacts:ro
     restart: unless-stopped

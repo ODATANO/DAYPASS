@@ -40,11 +40,9 @@ mta_archives/
 # Aiken build output (plutus.json IS committed)
 contracts/**/build/
 
-# ZK prover sidecar: Gradle build output. data/ (dev trusted-setup cache) IS
-# committed: a regenerated setup silently changes the VK and with it the
-# verifier policyId, breaking continuity with on-chain attestations.
-zk/daypass-prover/.gradle/
-zk/daypass-prover/build/
+# zk/artifacts/ (DAYZERO proving keys + validator registry) IS committed:
+# a regenerated setup silently changes the VK and with it the verifier
+# policyId, breaking continuity with on-chain attestations.
 
 # Claude Code local settings (personal permissions)
 .claude/settings.local.json

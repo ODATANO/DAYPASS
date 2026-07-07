@@ -3,8 +3,7 @@
 [![Tests](https://github.com/ODATANO/DAYPASS/actions/workflows/test.yaml/badge.svg)](https://github.com/ODATANO/DAYPASS/actions/workflows/test.yaml)
 [![codecov](https://codecov.io/gh/ODATANO/DAYPASS/branch/main/graph/badge.svg)](https://codecov.io/gh/ODATANO/DAYPASS)
 [![@odatano/core](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FODATANO%2FDAYPASS%2Fmain%2Fpackage.json&query=%24.dependencies%5B%27%40odatano%2Fcore%27%5D&logo=npm&label=%40odatano%2Fcore&color=blue)](https://www.npmjs.com/package/@odatano/core)
-[![ZeroJ](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FODATANO%2FDAYPASS%2Fmain%2Fpackage.json&query=%24.zkToolchain.zeroj&label=ZeroJ&color=8A2BE2)](https://github.com/bloxbean/zeroj)
-[![Julc](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FODATANO%2FDAYPASS%2Fmain%2Fpackage.json&query=%24.zkToolchain.julc&label=Julc&color=8A2BE2)](https://github.com/bloxbean)
+[![@odatano/dayzero](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FODATANO%2FDAYPASS%2Fmain%2Fpackage.json&query=%24.zkToolchain.dayzero&logo=npm&label=%40odatano%2Fdayzero&color=8A2BE2)](https://www.npmjs.com/package/@odatano/dayzero)
 
 EU Battery Regulation 2023/1542 Digital Product Passport on **Cardano**: one
 CIP-25 NFT per passport plus an anchor metadata label carrying the payload
@@ -70,8 +69,10 @@ fields ("carbon footprint <= 4000 kg CO2e") without disclosing the number:
 
 - every anchor additionally commits a Poseidon Merkle root over the 9 provable
   fields (`poseidonRoot` in the 1155 label)
-- a prover sidecar (`zk/daypass-prover`: Java 25, ZeroJ/Julc, Groth16 over
-  BLS12-381, 4241 constraints) builds the proof and the Plutus V3 verifier
+- a prover sidecar ([@odatano/dayzero](https://www.npmjs.com/package/@odatano/dayzero):
+  pure TypeScript, Groth16 over BLS12-381, coset-FFT domain, multi-core MSM)
+  builds the proof; the Plutus V3 verifier is a hand-written Aiken policy
+  shipped with the trust roots in `zk/artifacts/`
 - `provePassportPredicate` mints a predicate NFT whose mint redeemer IS the
   proof: the validator runs the full Groth16 pairing check on-chain, so the
   statement is verified by the Cardano ledger itself. Example on Preview:
@@ -126,9 +127,10 @@ BLS12-381 builtin flat tags in `@harmoniclabs/uplc` and a Buffer-mutating
 
 ## Credits
 
-The zero-knowledge track is built on the excellent
-[bloxbean](https://github.com/bloxbean) stack:
-[ZeroJ](https://github.com/bloxbean/zeroj) (circuit DSL, Groth16 prover,
-Poseidon) and [Julc](https://github.com/bloxbean/julc) (Java-to-Plutus
-compiler for the on-chain verifier), with
-[zeroj-usecases](https://github.com/bloxbean/zeroj-usecases) as the template
+The zero-knowledge track runs on
+[@odatano/dayzero](https://www.npmjs.com/package/@odatano/dayzero)
+(pure-TypeScript Groth16 prover, Poseidon, and the Aiken on-chain verifier).
+The design of the predicate flow owes to the
+[bloxbean](https://github.com/bloxbean) ZK stack
+([ZeroJ](https://github.com/bloxbean/zeroj)), which powered the first
+iterations of this track.

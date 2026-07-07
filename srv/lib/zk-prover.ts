@@ -1,12 +1,13 @@
 import { PROVABLE_FIELDS, scaleValue } from './passport-anchor';
 
 /**
- * Client for the DAYPASS ZK prover sidecar (zk/daypass-prover).
+ * Client for the DAYPASS ZK prover sidecar (@odatano/dayzero, see
+ * docker-compose.yml).
  *
- * The sidecar is a stateless Java service wrapping ZeroJ: it builds the
- * Poseidon twin of the blake2b contentRoot, generates Groth16 BLS12-381
- * proofs for field-bound threshold predicates and serves the Julc-compiled
- * on-chain verifier policy. DAYPASS sends the scaled provable-field values
+ * The sidecar is stateless: it builds the Poseidon twin of the blake2b
+ * contentRoot, generates Groth16 BLS12-381 proofs for field-bound threshold
+ * predicates and serves the Aiken-built on-chain verifier policy from the
+ * zk/artifacts/ trust roots. DAYPASS sends the scaled provable-field values
  * per request and persists nothing prover-side.
  *
  * Disabled unless DAYPASS_ZK_PROVER_URL is set. When the URL IS set, the ZK
@@ -67,7 +68,7 @@ async function post(path: string, body: unknown): Promise<any> {
 export class ZkProverUnreachableError extends Error {
     constructor(cause: string) {
         super(`ZK prover configured (DAYPASS_ZK_PROVER_URL) but not usable: ${cause}. `
-            + 'Start zk/daypass-prover, or unset the variable for a Track A only anchor.');
+            + 'Start it (docker compose up -d daypass-prover), or unset the variable for a Track A only anchor.');
         this.name = 'ZkProverUnreachableError';
     }
 }
@@ -122,7 +123,7 @@ export async function provePredicate(input: {
     }) as ZkProveResult;
 }
 
-/** The Julc verifier policy for an op, VK applied. */
+/** The Groth16 verifier policy for an op, VK applied. */
 export async function fetchValidator(op: 'greaterOrEqual' | 'lessOrEqual'): Promise<ZkValidatorInfo> {
     const base = proverUrl();
     if (!base) throw new Error('DAYPASS_ZK_PROVER_URL not configured');
@@ -135,7 +136,8 @@ export async function fetchValidator(op: 'greaterOrEqual' | 'lessOrEqual'): Prom
 /**
  * Strip ONE CBOR byte-string wrap from a script hex, or null when the hex is
  * not a byte string that spans exactly the remaining bytes. Used to reconcile
- * Julc's getCborHex (double-wrapped) with ODATANO's single-wrap expectation.
+ * a double-wrapped validator cborHex with ODATANO's single-wrap expectation
+ * (resolveZkPolicy tries both variants and keeps the one whose hash matches).
  */
 export function unwrapCborByteString(hex: string): string | null {
     const clean = hex.toLowerCase().replace(/^0x/, '');

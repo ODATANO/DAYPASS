@@ -156,7 +156,7 @@ entity Batteries : cuid {
     // Commercially sensitive numeric fields a supplier wants to keep hidden but
     // must evidence a bound on (provable fields; see PROVABLE_FIELDS). All are
     // RESTRICTED cleartext. Track A discloses the value with a Merkle inclusion
-    // proof against the anchored contentRoot; Track B (ZeroJ) proves the bound
+    // proof against the anchored contentRoot; Track B (zk) proves the bound
     // without disclosure.
     recycledContentPct     : Decimal(5, 2);  // Art. 8 recycled content. Prove '>= min quota'.
     cycleLife              : Integer;        // Annex IV full cycles to 80% SoH. Prove '>= N'.

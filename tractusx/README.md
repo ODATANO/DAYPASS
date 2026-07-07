@@ -15,7 +15,7 @@ Midnight attestation replaced by the Cardano one:
 | mode | valueDisclosed | evidence | verification |
 |---|---|---|---|
 | `revealedValue+merkleInclusion` (Track A) | true | Merkle inclusion proof folding to the ON-CHAIN contentRoot | any Cardano API, no trust in DAYPASS |
-| `zkPredicate` (Track B, ZeroJ, experimental) | false | a predicate token minted under a PINNED Groth16 verifier policy, its inline datum bound to the passport's anchored poseidonRoot | any Cardano API, against a trusted verifier-policy set |
+| `zkPredicate` (Track B, experimental) | false | a predicate token minted under a PINNED Groth16 verifier policy, its inline datum bound to the passport's anchored poseidonRoot | any Cardano API, against a trusted verifier-policy set |
 
 Track A is deliberately stronger than NIGHTPASS's `indexer-trust` model: the
 verifier recomputes the Merkle fold locally and compares against metadata that
@@ -62,7 +62,7 @@ curl -s $DAYPASS_ZK_PROVER_URL/validator?op=lessOrEqual    | jq -r .scriptHash
 curl -s $DAYPASS_ZK_PROVER_URL/validator?op=greaterOrEqual | jq -r .scriptHash
 ```
 
-A change to the trusted setup (`zk/daypass-prover/data/*.bin`) changes the VK
+A change to the trusted setup (`zk/artifacts/daypass-groth16-setup.*.json`) changes the VK
 and thus the policyId — re-pin after any setup change.
 
 The sample PAC in `samples/` was produced on Preview: a demo passport was

@@ -8,8 +8,8 @@
     "Populate from a trusted source, NOT from the PAC being verified:",
     "  curl -s $DAYPASS_ZK_PROVER_URL/validator?op=lessOrEqual | jq -r .scriptHash",
     "or read the confirmed on-chain mint policyId of a known-good predicate tx.",
-    "A change of the trusted setup (zk/daypass-prover/data/*.bin) changes the VK",
-    "and therefore the policyId, so re-pin after any setup change.",
+    "A change of the trusted setup (zk/artifacts/daypass-groth16-setup.*.json)",
+    "changes the VK and therefore the policyId, so re-pin after any setup change.",
     "",
     "You may also pass extra trusted hashes at run time without editing this file:",
     "  PAC_TRUST_VERIFIER_POLICY=<hash>[,<hash>] node verify-pac.mjs ...",
@@ -17,8 +17,8 @@
   ],
   "policies": {
     "cardano-preview": {
-      "greaterOrEqual": "d2b0c7234aacd45e2ed8a03e4ff048d111ddda2357386fca4e0cbc06",
-      "lessOrEqual": "e0769fe8bad64dbb3480d40b1820718318c6593088e6f7b9fb2a4f36"
+      "greaterOrEqual": "acccc6fef9269939b3d4ad39a3094018b9aca35ddd85a224ab789831",
+      "lessOrEqual": "208258d2050edf4e5ab4aeae3b66f2783483c4d1dded87c14595eaaa"
     },
     "cardano-preprod": {
       "greaterOrEqual": "",

@@ -9,8 +9,8 @@ Producer cockpit (SAPUI5)                  Consumer viewer (3 tiers, QR landing)
    v                                           v
 DAYPASS CAP services    /api/v1/producer   +   /api/v1/passport
    |  passport-anchor: canonical JSON -> blake2b payloadHash,
-   |  AES-256-GCM payloadCipher, blake2b Merkle contentRoot        zk/daypass-prover
-   |  + Poseidon root (ZK twin) <------------------------------->  (ZeroJ/Julc, Groth16,
+   |  AES-256-GCM payloadCipher, blake2b Merkle contentRoot        @odatano/dayzero
+   |  + Poseidon root (ZK twin) <------------------------------->  (Groth16 prover,
    v                                                                port 8799, optional)
 @odatano/core (CAP plugin)
    CardanoTransactionService  BuildMintTransaction, BuildTransactionWithMetadata, Submit
@@ -60,8 +60,9 @@ Two disclosure tracks bind claims to the anchor:
   the standalone verifier).
 - **Track B (zk)**: prove a threshold statement ("carbonFootprint <= 4000 kg")
   WITHOUT revealing the value. The stateless prover sidecar
-  (`zk/daypass-prover`: ZeroJ, Groth16 over BLS12-381) builds a proof bound to
-  the anchored poseidonRoot and serves the Julc-compiled Plutus V3 verifier.
+  ([@odatano/dayzero](https://www.npmjs.com/package/@odatano/dayzero),
+  Groth16 over BLS12-381) builds a proof bound to the anchored poseidonRoot
+  and serves the Aiken-built Plutus V3 verifier from `zk/artifacts/`.
   DAYPASS uses that verifier as a MINTING POLICY: the proof travels as the
   mint redeemer, the public inputs as inline datum, so a successful mint IS
   the on-chain verification by the ledger itself.

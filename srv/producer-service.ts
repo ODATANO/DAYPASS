@@ -197,9 +197,9 @@ export default class ProducerService extends cds.ApplicationService {
     }
 
     /**
-     * Fetch the Julc-compiled Groth16 verifier policy from the prover and make
-     * sure ODATANO hashes it to the same policyId as the Java side. Julc's
-     * getCborHex may carry one extra CBOR byte-string wrap compared to what
+     * Fetch the Groth16 verifier policy from the prover and make sure ODATANO
+     * hashes it to the same policyId the prover declares. The served cborHex
+     * may carry one extra CBOR byte-string wrap compared to what
      * DeriveScriptAddress expects; if the hashes differ, retry with one layer
      * stripped. Cached per predicate op.
      */
@@ -771,7 +771,7 @@ export default class ProducerService extends cds.ApplicationService {
     /**
      * Prove a threshold predicate over ONE provable field WITHOUT disclosing
      * the value: Groth16 proof from the prover sidecar, verified ON-CHAIN by
-     * the Julc verifier minting policy (one predicate token per proof). Async
+     * the verifier minting policy (one predicate token per proof). Async
      * like the other pipelines (`mode: 'submitting'`); watch PredicateProofLog.
      */
     private async onProvePassportPredicate(req: any) {
@@ -786,7 +786,7 @@ export default class ProducerService extends cds.ApplicationService {
             return req.error(400, 'threshold (raw value, e.g. 4000 for 4000 kg) is required');
         }
         if (!zkProverEnabled()) {
-            return req.error(409, 'ZK prover not configured, set DAYPASS_ZK_PROVER_URL and start zk/daypass-prover');
+            return req.error(409, 'ZK prover not configured, set DAYPASS_ZK_PROVER_URL and start the sidecar (docker compose up -d daypass-prover)');
         }
         const creds = this.serverCreds();
         if (!creds) return req.error(400, 'server signing not configured (PRODUCER_PAYMENT_SKEY / PRODUCER_ADDRESS)');
@@ -984,7 +984,7 @@ export default class ProducerService extends cds.ApplicationService {
             return req.error(400, 'threshold (raw value, e.g. 4000 for 4000 kg) is required');
         }
         if (!zkProverEnabled()) {
-            return req.error(409, 'ZK prover not configured, set DAYPASS_ZK_PROVER_URL and start zk/daypass-prover');
+            return req.error(409, 'ZK prover not configured, set DAYPASS_ZK_PROVER_URL and start the sidecar (docker compose up -d daypass-prover)');
         }
         const loaded = await this.loadPassport(String(passportId));
         if (!loaded) return req.error(404, `passport "${passportId}" not found`);

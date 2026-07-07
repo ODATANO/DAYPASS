@@ -10,7 +10,7 @@ import { anchorLabel } from './metadata-composer';
  *   - merkle (Track A): the value IS disclosed, bound to the passport via a
  *     Merkle inclusion proof against the ON-CHAIN contentRoot. Stronger than
  *     NIGHTPASS's "indexer-trust": any Cardano API can re-verify.
- *   - zk (Track B, ZeroJ): value hidden; the successful verifier-script spend
+ *   - zk (Track B): value hidden; the successful verifier-script spend
  *     tx is the proof (only confirmed txs are exported).
  */
 
