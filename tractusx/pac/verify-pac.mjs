@@ -14,8 +14,10 @@
 //   5. every zk predicate proof is a REAL on-chain Groth16 attestation:
 //      - minted under a PINNED verifier policy (trust root, see
 //        verifier-policies.json), never merely "some tx exists"
-//      - the predicate token's asset name == passportIdHash (token<->passport)
-//      - the mint tx's inline datum public inputs bind to THIS passport:
+//      - the predicate token's asset name commits to the public inputs
+//        (policy v2: blake2b-224 over the serialised datum; legacy tokens:
+//        a passportIdHash suffix)
+//      - the token output's inline datum public inputs bind to THIS passport:
 //        poseidonRoot == the anchored root, fieldKey == blake2b31(sourceField),
 //        threshold == the claimed threshold, isCompliant == 1
 //      - the predicate anchor metadata names the same passport/field/predicate
@@ -58,6 +60,37 @@ export function bytesToBigIntBE(bytes) {
   let n = 0n;
   for (const b of bytes) n = (n << 8n) | BigInt(b);
   return n;
+}
+
+// The v2 predicate token name: blake2b-224 over the canonical plutus-core
+// serialiseData CBOR of the public-input list (indefinite-length list, tag-2
+// bignums above 2^64). Mirrors DAYZERO's daypassPredicateAssetName, which is
+// locked against the on-chain Aiken derivation by a generated differential test.
+function cborHeadU(major, value) {
+  const base = major << 5;
+  if (value < 24n) return [base + Number(value)];
+  if (value < 1n << 8n) return [base + 24, Number(value)];
+  if (value < 1n << 16n) return [base + 25, Number(value >> 8n), Number(value & 0xffn)];
+  if (value < 1n << 32n) return [base + 26, Number(value >> 24n & 0xffn), Number(value >> 16n & 0xffn), Number(value >> 8n & 0xffn), Number(value & 0xffn)];
+  const out = [base + 27];
+  for (let shift = 56n; shift >= 0n; shift -= 8n) out.push(Number(value >> shift & 0xffn));
+  return out;
+}
+export function predicateTokenName(publicInputs) {
+  const bytes = [0x9f];
+  for (const v of publicInputs) {
+    if (v < 0n) throw new Error('public inputs must be non-negative');
+    if (v < 1n << 64n) {
+      bytes.push(...cborHeadU(0, v));
+    } else {
+      let hex = v.toString(16);
+      if (hex.length % 2) hex = '0' + hex;
+      const bs = hex.match(/../g).map((p) => parseInt(p, 16));
+      bytes.push(0xc2, ...cborHeadU(2, BigInt(bs.length)), ...bs);
+    }
+  }
+  bytes.push(0xff);
+  return bytesToHex(blake2b(Uint8Array.from(bytes), { dkLen: 28 }));
 }
 
 function foldProof(proof) {
@@ -231,19 +264,29 @@ export function checkZkPredicate(proof, subject, chain, trusted, anchorLabel) {
   rec(`${label}: verifier policy pinned/trusted`, trustedOk, trustedOk ? policyId : `${policyId} NOT in trusted set`);
   if (!trustedOk) return out; // nothing else can be trusted without the policy
 
-  // Exactly one predicate token is minted under the pinned policy, and its asset
-  // name binds to this passport. ODATANO's mintActions keeps only the bytes of
-  // the 64-hex passportIdHash that follow the 56-hex policyId, so the on-chain
-  // asset name is the trailing slice of blake2b(passportId) — check by suffix.
+  // Exactly one predicate token is minted under the pinned policy, and its
+  // asset name binds to the proof. Policy v2 enforces on-chain that the name
+  // is blake2b-224 over serialiseData of the token output's datum, so we
+  // recompute exactly that from the DECODED public inputs (serialiseData is
+  // canonical; the tx's raw datum bytes need not be). Legacy (pre-v2) tokens
+  // carry a trailing slice of the 64-hex passportIdHash — accepted by suffix.
   const passportIdHash = blake2b256HexUtf8(subject.passportId);
   if (subject.passportIdHash && clean(subject.passportIdHash) !== passportIdHash) {
     rec(`${label}: passportIdHash matches passportId`, false, 'subject.passportIdHash != blake2b(passportId)');
   }
   const token = findPredicateToken(chain.utxos, policyId);
-  const nameBinds = !!token && token.assetName.length > 0 && passportIdHash.endsWith(token.assetName.toLowerCase());
-  rec(`${label}: exactly one predicate token minted under the pinned policy, bound to this passport`,
+  const outputs = chain.utxos?.outputs ?? [];
+  const tokenOutput = token ? outputs.find((o) => (o.amount ?? []).some((a) => a.unit === token.unit)) : null;
+  let tokenInputs = null;
+  try { tokenInputs = tokenOutput?.inline_datum ? datumPublicInputs(tokenOutput.inline_datum) : null; }
+  catch { /* handled by the datum checks below */ }
+  const datumBoundName = tokenInputs ? predicateTokenName(tokenInputs) : null;
+  const nameBinds = !!token && token.assetName.length > 0
+    && (token.assetName.toLowerCase() === datumBoundName
+      || passportIdHash.endsWith(token.assetName.toLowerCase()));
+  rec(`${label}: exactly one predicate token minted under the pinned policy, bound to the proof`,
     !!token && token.quantity === 1n && nameBinds,
-    !token ? 'no single predicate token in the tx outputs' : `name=${token.assetName} qty=${token.quantity}${nameBinds ? '' : ' (name not a suffix of passportIdHash)'}`);
+    !token ? 'no single predicate token in the tx outputs' : `name=${token.assetName.slice(0, 16)}… qty=${token.quantity}${nameBinds ? '' : ' (name commits to neither the datum nor the passportIdHash)'}`);
 
   // Mint origin: the token was MINTED by this tx, not merely moved into it.
   const asset = chain.asset;
@@ -252,11 +295,13 @@ export function checkZkPredicate(proof, subject, chain, trusted, anchorLabel) {
     !!asset && String(asset.quantity) === '1' && mintedHere,
     !asset ? 'asset not found' : `qty=${asset.quantity} mintTx=${String(asset.initial_mint_tx_hash).slice(0, 12)}…`);
 
-  // Public-input binding: read the mint tx's first-output inline datum.
-  const outputs = chain.utxos?.outputs ?? [];
-  const out0 = outputs.find((o) => o.output_index === 0) ?? outputs[0];
+  // Public-input binding: read the inline datum of the output carrying the
+  // token (what policy v2 checks); legacy mints put it on output 0.
+  const datumOut = tokenOutput?.inline_datum
+    ? tokenOutput
+    : (outputs.find((o) => o.output_index === 0) ?? outputs[0]);
   let inputs = null;
-  try { inputs = out0?.inline_datum ? datumPublicInputs(out0.inline_datum) : null; }
+  try { inputs = datumOut?.inline_datum ? datumPublicInputs(datumOut.inline_datum) : null; }
   catch (e) { rec(`${label}: inline datum decodes`, false, e.message); }
   if (inputs) {
     const [datumRoot, datumField, datumThreshold, datumCompliant] = inputs;
@@ -269,8 +314,8 @@ export function checkZkPredicate(proof, subject, chain, trusted, anchorLabel) {
     rec(`${label}: datum poseidonRoot == anchored root (binds to this passport)`,
       anchoredRoot != null && datumRoot === anchoredRoot,
       anchoredRoot == null ? 'anchor carries no poseidonRoot' : (datumRoot === anchoredRoot ? '' : 'root mismatch'));
-  } else if (out0) {
-    rec(`${label}: first output carries an inline datum`, false, 'no inline_datum on output 0');
+  } else if (datumOut) {
+    rec(`${label}: predicate token output carries an inline datum`, false, 'no inline_datum found');
   }
 
   // Defense in depth: the predicate anchor metadata names this passport/field.

@@ -7,15 +7,18 @@ services:
   daypass-prover:
     image: node:22-alpine
     container_name: daypass-prover
-    command: npx -y -p @odatano/dayzero@^0.1.1 dayzero-daypass-sidecar
+    command: npx -y -p @odatano/dayzero@^0.2.0 dayzero-daypass-sidecar
     environment:
       # Trust roots from the repo: the secret-free proving keys and the
       # validator registry. Regenerating them changes the VK and the on-chain
       # policyIds pinned in tractusx/pac/verifier-policies.json.
       DAYZERO_DAYPASS_PROVING_KEYS: /artifacts
       DAYZERO_DAYPASS_VALIDATOR_ARTIFACTS: /artifacts/daypass-validator-registry.crs.json
+      # 0.1.2 defaults to 127.0.0.1; inside the container it must bind all
+      # interfaces for the port mapping. Host-side exposure stays loopback-only.
+      DAYPASS_PROVER_HOST: 0.0.0.0
     ports:
-      - "8799:8799"
+      - "127.0.0.1:8799:8799"
     volumes:
       - ./zk/artifacts:/artifacts:ro
     restart: unless-stopped

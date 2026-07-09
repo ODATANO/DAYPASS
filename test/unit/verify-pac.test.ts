@@ -2,7 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   decodeCbor, datumPublicInputs, fieldKeyFe, bytesToBigIntBE,
-  loadPinnedPolicies, isPolicyTrusted, checkZkPredicate, findPredicateToken, blake2b256HexUtf8
+  loadPinnedPolicies, isPolicyTrusted, checkZkPredicate, findPredicateToken, blake2b256HexUtf8,
+  predicateTokenName
 } from '../../tractusx/pac/verify-pac.mjs';
 import { buildPacJson } from '../../srv/lib/catenax';
 
@@ -80,10 +81,12 @@ const FIELD = 'carbonFootprintKgCO2';
 const MINT_TX = 'b'.repeat(64);
 const ROOT = 98765432109876543210987654321098765432109876543210n;
 
-// Reality: ODATANO mints the predicate token with the passportIdHash TRAILING
-// slice as its asset name (the bytes after the 56-hex policyId), never the full hash.
+// Tokens minted before core 1.9.5 carry only the TRAILING slice of the
+// passportIdHash as their asset name (odatano bug #9); newer mints carry the
+// full 64-hex hash. The verifier's suffix check must accept both, so the main
+// fixture keeps the legacy sliced name and a dedicated test covers the full name.
 const PID_HASH = blake2b256HexUtf8(PASSPORT);
-const ASSET_NAME = PID_HASH.slice(56); // last 4 bytes / 8 hex
+const ASSET_NAME = PID_HASH.slice(56); // legacy: last 4 bytes / 8 hex
 
 function fixture() {
   const datum = encList4([encBignum(ROOT), encBignum(fieldKeyFe(FIELD)), encUint(4000000n), encUint(1n)]);
@@ -114,6 +117,42 @@ test('checkZkPredicate passes for a valid, pinned, passport-bound predicate mint
   const { subject, proof, chain, trusted } = fixture();
   const rows = checkZkPredicate(proof, subject, chain, trusted, '1155');
   assert.ok(allOk(rows), 'all checks pass: ' + JSON.stringify(rows.filter((r: any) => !r[1])));
+});
+
+test('checkZkPredicate passes for a token named with the FULL passportIdHash (core >=1.9.5 mints)', () => {
+  const { subject, proof, chain, trusted } = fixture();
+  const datum = encList4([encBignum(ROOT), encBignum(fieldKeyFe(FIELD)), encUint(4000000n), encUint(1n)]);
+  const fullName = {
+    ...chain,
+    utxos: { outputs: [{ output_index: 0, inline_datum: toHex(datum), amount: [{ unit: 'lovelace', quantity: '1500000' }, { unit: POLICY + PID_HASH, quantity: '1' }] }] }
+  };
+  const rows = checkZkPredicate(proof, subject, fullName, trusted, '1155');
+  assert.ok(allOk(rows), 'all checks pass: ' + JSON.stringify(rows.filter((r: any) => !r[1])));
+});
+
+test('checkZkPredicate passes for a policy-v2 token named by the datum commitment', () => {
+  const { subject, proof, chain, trusted } = fixture();
+  const publics = [ROOT, fieldKeyFe(FIELD), 4000000n, 1n];
+  const datum = encList4([encBignum(ROOT), encBignum(fieldKeyFe(FIELD)), encUint(4000000n), encUint(1n)]);
+  const v2Name = predicateTokenName(publics);
+  const v2 = {
+    ...chain,
+    utxos: { outputs: [{ output_index: 0, inline_datum: toHex(datum), amount: [{ unit: 'lovelace', quantity: '1500000' }, { unit: POLICY + v2Name, quantity: '1' }] }] }
+  };
+  const rows = checkZkPredicate(proof, subject, v2, trusted, '1155');
+  assert.ok(allOk(rows), 'all checks pass: ' + JSON.stringify(rows.filter((r: any) => !r[1])));
+});
+
+test('checkZkPredicate rejects a token whose name commits to neither datum nor passport', () => {
+  const { subject, proof, chain, trusted } = fixture();
+  const datum = encList4([encBignum(ROOT), encBignum(fieldKeyFe(FIELD)), encUint(4000000n), encUint(1n)]);
+  const bogus = {
+    ...chain,
+    utxos: { outputs: [{ output_index: 0, inline_datum: toHex(datum), amount: [{ unit: 'lovelace', quantity: '1500000' }, { unit: POLICY + 'ff'.repeat(28), quantity: '1' }] }] }
+  };
+  const rows = checkZkPredicate(proof, subject, bogus, trusted, '1155');
+  assert.equal(allOk(rows), false);
+  assert.ok(rows.some((r: any) => /bound to the proof/.test(r[0]) && !r[1]));
 });
 
 test('checkZkPredicate rejects an untrusted verifier policy (the core forgery guard)', () => {
@@ -158,14 +197,18 @@ test('buildPacJson exports verifierPolicyId + public inputs for a zk proof', () 
   const proofRow = {
     mode: 'zk', sourceField: FIELD, predicate: 'lessOrEqual', threshold: '4000000', unit: 'kg CO2e',
     txHash: MINT_TX, result: true, status: 'confirmed',
-    proofJson: JSON.stringify({ policyId: POLICY, poseidonRoot: ROOT.toString(), fieldKey: fieldKeyFe(FIELD).toString(), threshold: '4000000' })
+    proofJson: JSON.stringify({ policyId: POLICY, assetNameHex: 'ab'.repeat(28), poseidonRoot: ROOT.toString(), fieldKey: fieldKeyFe(FIELD).toString(), threshold: '4000000' })
   };
   const pac = JSON.parse(buildPacJson({ passport, proofs: [proofRow] }));
   const zk = pac.credentialSubject.predicateProofs[0];
   assert.equal(pac.credentialSubject.passportIdHash, blake2b256HexUtf8(PASSPORT));
   assert.equal(zk.disclosureMode, 'zkPredicate');
   assert.equal(zk.verifierPolicyId, POLICY);
-  assert.equal(zk.predicateAssetName, blake2b256HexUtf8(PASSPORT).slice(56));
+  // v2: the prover-supplied datum commitment; legacy rows fall back to passportIdHash
+  assert.equal(zk.predicateAssetName, 'ab'.repeat(28));
+  const legacyRow = { ...proofRow, proofJson: JSON.stringify({ policyId: POLICY, poseidonRoot: ROOT.toString(), fieldKey: fieldKeyFe(FIELD).toString(), threshold: '4000000' }) };
+  const legacyPac = JSON.parse(buildPacJson({ passport, proofs: [legacyRow] }));
+  assert.equal(legacyPac.credentialSubject.predicateProofs[0].predicateAssetName, blake2b256HexUtf8(PASSPORT));
   assert.equal(zk.publicInputs.poseidonRoot, ROOT.toString());
   assert.equal(zk.publicInputs.fieldKey, fieldKeyFe(FIELD).toString());
   assert.equal(zk.publicInputs.threshold, '4000000');

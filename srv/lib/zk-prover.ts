@@ -24,6 +24,9 @@ export interface ZkProveResult {
     proofTimeMs: number;
     redeemerJson: unknown;  // ODATANO mintRedeemerJson: constr 0 [piA, piB, piC]
     datumJson: unknown;     // ODATANO inlineDatumJson: list [root, fieldKey, threshold, isCompliant]
+    // On-chain asset name the v2 predicate policy enforces:
+    // blake2b-224 over the serialised datum (dayzero >= 0.2.0)
+    assetNameHex: string;
 }
 
 export interface ZkValidatorInfo {

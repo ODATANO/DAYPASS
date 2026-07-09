@@ -10,11 +10,11 @@
   },
   "zkToolchain": {
     "_comment": "ZK sidecar version surfaced as README badge (shields dynamic/json). Mirror of the @odatano/dayzero version in docker-compose.yml — keep in sync on bump.",
-    "dayzero": "^0.1.1"
+    "dayzero": "^0.2.0"
   },
   "dependencies": {
     "@noble/hashes": "^1.5.0",
-    "@odatano/core": "^1.9.4",
+    "@odatano/core": "^1.9.5",
     "@sap/cds": "^9",
     "express": "^4",
     "qrcode": "^1.5.4"

@@ -58,7 +58,7 @@ The mint tx carries both labels; reattest and audit anchors are plain
 metadata txs with only the 1155 label.
 
 Example on Preview: mint + anchor tx
-[`ee17c174…c0f9d6`](https://preview.cardanoscan.io/transaction/ee17c174ca5b5a6ae15bf0a1b86a3fc47ca886ecdcc97a466faa6f2bc1c0f9d6)
+[`ae0d4c2d…05af8f`](https://preview.cardanoscan.io/transaction/ae0d4c2df24410ad4991a5ca578183b448d2b5f268e1010e489bbed0d105af8f)
 carries the CIP-25 passport NFT and the 1155 anchor label (payloadHash,
 contentRoot, poseidonRoot, Point-1 fields).
 
@@ -73,10 +73,12 @@ fields ("carbon footprint <= 4000 kg CO2e") without disclosing the number:
   pure TypeScript, Groth16 over BLS12-381, coset-FFT domain, multi-core MSM)
   builds the proof; the Plutus V3 verifier is a hand-written Aiken policy
   shipped with the trust roots in `zk/artifacts/`
-- `provePassportPredicate` mints a predicate NFT whose mint redeemer IS the
-  proof: the validator runs the full Groth16 pairing check on-chain, so the
-  statement is verified by the Cardano ledger itself. Example on Preview:
-  [`b54418fc…f9aa31`](https://preview.cardanoscan.io/transaction/b54418fc4282ae686551b0a452d31fd52e3f30d10b4533aa990dc00bd6f9aa31)
+- `provePassportPredicate` mints a predicate token whose mint redeemer IS the
+  proof: the validator runs the full Groth16 pairing check on-chain and
+  enforces that the token's asset name commits to the public inputs
+  (blake2b-224 over the serialised datum), so the statement is verified by
+  the Cardano ledger itself. Example on Preview:
+  [`5a5c0a64…57d52c`](https://preview.cardanoscan.io/transaction/5a5c0a648333f68c94064ed83385bae121ed26eca6f585a10fd90f48c457d52c)
   proves carbonFootprint lessOrEqual threshold against the poseidonRoot
   anchored by the mint tx linked above
 - the PAC export carries these as `zkPredicate` entries next to the

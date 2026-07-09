@@ -322,6 +322,9 @@ export default class ProducerService extends cds.ApplicationService {
                 thresholdScaled: args.zk.thresholdScaled, op: args.zk.predicate
             });
             logger.info(`zk proof for ${passport.passportId}.${args.zk.sourceField} generated in ${zkProof.proofTimeMs} ms, compliant: ${zkProof.isCompliant}`);
+            if (zkProof.isCompliant && !zkProof.assetNameHex) {
+                throw new Error('zk prover response lacks assetNameHex (the v2 policy binds the token name to the public inputs); @odatano/dayzero >= 0.2.0 required');
+            }
             zkPolicy = await this.resolveZkPolicy(args.zk.predicate);
             await this.runDetached(async () => {
                 await UPDATE.entity(PROOFLOG).set({
@@ -329,7 +332,8 @@ export default class ProducerService extends cds.ApplicationService {
                     proofJson: JSON.stringify({
                         poseidonRoot: zkProof!.poseidonRoot, fieldKey: zkProof!.fieldKey,
                         threshold: zkProof!.threshold, isCompliant: zkProof!.isCompliant,
-                        policyId: zkPolicy!.scriptHash, redeemer: zkProof!.redeemerJson, datum: zkProof!.datumJson
+                        policyId: zkPolicy!.scriptHash, assetNameHex: zkProof!.assetNameHex,
+                        redeemer: zkProof!.redeemerJson, datum: zkProof!.datumJson
                     })
                 }).where({ ID: args.zk!.proofLogId });
             });
@@ -393,13 +397,15 @@ export default class ProducerService extends cds.ApplicationService {
             }
             if (args.kind === 'zkProve') {
                 // Track B: mint ONE predicate token under the Groth16 verifier
-                // policy. The redeemer carries the proof, the first output's
+                // policy. The redeemer carries the proof, the token output's
                 // inline datum the public inputs; the policy only passes when
-                // the proof verifies on-chain AND isCompliant is 1.
+                // the proof verifies on-chain, isCompliant is 1 AND the token
+                // name commits to the datum (blake2b-224 over its serialisation).
                 return sendDetached('CardanoTransactionService', 'BuildMintTransaction', {
                     senderAddress: creds.address, recipientAddress: creds.address,
                     lovelaceAmount: MINT_LOVELACE,
-                    mintActionsJson: JSON.stringify([{ assetUnit: passport.passportIdHash, quantity: '1' }]),
+                    // full unit: core >=1.9.5 rejects bare asset names over 28 bytes (bug #9)
+                    mintActionsJson: JSON.stringify([{ assetUnit: zkPolicy!.scriptHash + zkProof!.assetNameHex, quantity: '1' }]),
                     validityStartMs: String(Date.now() - 300_000),
                     mintingPolicyScript: zkPolicy!.cborHex,
                     mintRedeemerJson: JSON.stringify(zkProof!.redeemerJson),
@@ -1030,12 +1036,16 @@ export default class ProducerService extends cds.ApplicationService {
                 })
             };
         }
+        if (!zkProof.assetNameHex) {
+            return req.error(503, 'zk prover response lacks assetNameHex (the v2 policy binds the token name to the public inputs); @odatano/dayzero >= 0.2.0 required');
+        }
         const zkPolicy = await this.resolveZkPolicy(predicate as 'lessOrEqual' | 'greaterOrEqual', { inRequest: true });
         return {
             isCompliant: true, thresholdScaled, poseidonRoot: zkProof.poseidonRoot,
             policyId: zkPolicy.scriptHash,
             lovelaceAmount: MINT_LOVELACE,
-            mintActionsJson: JSON.stringify([{ assetUnit: row.passportIdHash, quantity: '1' }]),
+            // full unit: core >=1.9.5 rejects bare asset names over 28 bytes (bug #9)
+            mintActionsJson: JSON.stringify([{ assetUnit: zkPolicy.scriptHash + zkProof.assetNameHex, quantity: '1' }]),
             mintingPolicyScript: zkPolicy.cborHex,
             mintRedeemerJson: JSON.stringify(zkProof.redeemerJson),
             inlineDatumJson: JSON.stringify(zkProof.datumJson),
@@ -1048,7 +1058,8 @@ export default class ProducerService extends cds.ApplicationService {
             proofJson: JSON.stringify({
                 poseidonRoot: zkProof.poseidonRoot, fieldKey: zkProof.fieldKey,
                 threshold: zkProof.threshold, isCompliant: true,
-                policyId: zkPolicy.scriptHash, redeemer: zkProof.redeemerJson, datum: zkProof.datumJson
+                policyId: zkPolicy.scriptHash, assetNameHex: zkProof.assetNameHex,
+                redeemer: zkProof.redeemerJson, datum: zkProof.datumJson
             })
         };
     }

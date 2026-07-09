@@ -17,8 +17,8 @@
   ],
   "policies": {
     "cardano-preview": {
-      "greaterOrEqual": "acccc6fef9269939b3d4ad39a3094018b9aca35ddd85a224ab789831",
-      "lessOrEqual": "208258d2050edf4e5ab4aeae3b66f2783483c4d1dded87c14595eaaa"
+      "greaterOrEqual": "36c7c687ff555d841d4ce20c63c7ea1b26cd22b8e310d3d64c083577",
+      "lessOrEqual": "0e321d1aeeab11be978e3472ff9797957b19a1851af3d4a2d11f306b"
     },
     "cardano-preprod": {
       "greaterOrEqual": "",

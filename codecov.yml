@@ -1,0 +1,11 @@
+# Coverage is reported, never enforced: the project and patch status checks
+# stay informational so a commit with lower coverage than main (e.g. plumbing
+# or contract-artifact changes) does not fail CI.
+coverage:
+  status:
+    project:
+      default:
+        informational: true
+    patch:
+      default:
+        informational: true

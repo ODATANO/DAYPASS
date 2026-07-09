@@ -137,12 +137,14 @@ export function buildPacJson(rows: PacRows): string {
                         // the policyId). A verifier MUST pin this against a
                         // trusted set; it is exported for discovery, not trust.
                         verifierPolicyId: pj.policyId ?? null,
-                        // On-chain asset name of the predicate token: ODATANO's
-                        // mintActions keeps only the bytes of the 64-hex
-                        // passportIdHash that trail the 56-hex policyId, so the
-                        // minted name is passportIdHash.slice(56). Advisory: the
-                        // verifier reads the actual token from the tx outputs.
-                        predicateAssetName: p.passportIdHash ? String(p.passportIdHash).replace(/^0x/, '').slice(56) : null,
+                        // On-chain asset name of the predicate token. Policy v2
+                        // derives it from the public inputs (blake2b-224 over the
+                        // serialised datum, provided by the prover); legacy tokens
+                        // carry (a slice of) the passportIdHash. Advisory: the
+                        // verifier reads the actual token from the tx outputs and
+                        // recomputes the binding itself.
+                        predicateAssetName: pj.assetNameHex
+                            ?? (p.passportIdHash ? String(p.passportIdHash).replace(/^0x/, '') : null),
                         // Circuit public inputs (decimal field elements). Advisory:
                         // the verifier recomputes fieldKey and reads poseidonRoot
                         // from the on-chain anchor rather than trusting these.
