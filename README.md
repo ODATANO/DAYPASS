@@ -1,11 +1,15 @@
-# @odatano/daypass (DAYPASS)
+# DAYPASS - Digital Battery Passport on Cardano
+
+![Header Image](/docs/readme_header.png)
+
+**EU Battery Regulation 2023/1542 Digital Battery Passport with three disclosure tiers, backed by zero-knowledge attestations on Cardano.**
 
 [![Tests](https://github.com/ODATANO/DAYPASS/actions/workflows/test.yaml/badge.svg)](https://github.com/ODATANO/DAYPASS/actions/workflows/test.yaml)
 [![codecov](https://codecov.io/gh/ODATANO/DAYPASS/branch/main/graph/badge.svg)](https://codecov.io/gh/ODATANO/DAYPASS)
 [![@odatano/core](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FODATANO%2FDAYPASS%2Fmain%2Fpackage.json&query=%24.dependencies%5B%27%40odatano%2Fcore%27%5D&logo=npm&label=%40odatano%2Fcore&color=blue)](https://www.npmjs.com/package/@odatano/core)
 [![@odatano/dayzero](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FODATANO%2FDAYPASS%2Fmain%2Fpackage.json&query=%24.zkToolchain.dayzero&logo=npm&label=%40odatano%2Fdayzero&color=8A2BE2)](https://www.npmjs.com/package/@odatano/dayzero)
 
-EU Battery Regulation 2023/1542 Digital Product Passport on **Cardano**: one
+EU Battery Regulation 2023/1542 Digital Battery Passport on **Cardano**: one
 CIP-25 NFT per passport plus an anchor metadata label carrying the payload
 hash, a Merkle content root and the public Point-1 fields. Sensitive data
 stays AES-encrypted off-chain; three disclosure tiers render lawful views of
